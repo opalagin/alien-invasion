@@ -2,6 +2,7 @@ import sys
 import pygame
 
 from bullet import Bullet
+from alien import Alien
 
 
 def check_events(settings, screen, ship, bullets):
@@ -23,6 +24,8 @@ def check_keydown_events(event, ship, settings, screen, bullets):
         ship.moving_left = True
     elif event.key == pygame.K_SPACE:
         fire_bullet(settings, screen, ship, bullets)
+    elif event.key == pygame.K_q:
+        sys.exit()
 
 
 def check_keyup_events(event, ship):
@@ -32,11 +35,12 @@ def check_keyup_events(event, ship):
         ship.moving_left = False
 
 
-def update_screen(settings, screen, ship, bullets):
+def update_screen(settings, screen, ship, aliens, bullets):
     screen.fill(settings.bg_color)
     for bullet in bullets.sprites():
         bullet.draw_bullet()
     ship.blitme()
+    aliens.draw(screen)
     pygame.display.flip()
 
 
@@ -52,3 +56,30 @@ def fire_bullet(settings, screen, ship, bullets):
     if len(bullets) < settings.bullets_allowed:
         new_bullet = Bullet(settings, screen, ship)
         bullets.add(new_bullet)
+
+def create_fleet(settings, screen, ship, aliens):
+    alien = Alien(settings, screen)
+    number_aliens_x = get_number_aliens_x(settings, alien.rect.width)
+    number_rows = get_number_rows(settings, ship_height=ship.rect.height, alien_height=alien.rect.height)
+
+    for row_number in range(number_rows):
+        for alien_number in range(number_aliens_x):
+            create_alien(settings, screen, aliens, alien_number, row_number)
+
+def get_number_aliens_x(settings, alien_width):
+    available_space_x = settings.screen_width - 2 * alien_width
+    number_aliens_x = int(available_space_x / (2 * alien_width))
+    return number_aliens_x
+
+def create_alien(settings, screen, aliens, alien_number, row_number):
+    alien = Alien(settings, screen)
+    alien_width = alien.rect.width
+    alien.x = alien_width + 2 * alien_width * alien_number
+    alien.rect.x = alien.x
+    alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
+    aliens.add(alien)
+
+def get_number_rows(settings, ship_height, alien_height):
+    available_space_y = (settings.screen_height - (3 * alien_height) - ship_height)
+    number_rows = int(available_space_y / (2 * alien_height))
+    return number_rows
