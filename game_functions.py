@@ -43,12 +43,13 @@ def check_keyup_events(event, ship):
         ship.moving_left = False
 
 
-def update_screen(settings, screen, ship, aliens, bullets, button, stats):
+def update_screen(settings, screen, ship, aliens, bullets, button, stats, sb):
     screen.fill(settings.bg_color)
     for bullet in bullets.sprites():
         bullet.draw_bullet()
     ship.blitme()
     aliens.draw(screen)
+    sb.show_score()
 
     if not stats.game_active:
         button.draw_button()
@@ -56,18 +57,23 @@ def update_screen(settings, screen, ship, aliens, bullets, button, stats):
     pygame.display.flip()
 
 
-def update_bullets(settings, bullets, screen, ship, aliens):
+def update_bullets(settings, bullets, screen, ship, aliens, stats, sb):
     bullets.update()
 
     for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
 
-    check_bullet_alien_collisions(settings, bullets, screen, ship, aliens)
+    check_bullet_alien_collisions(settings, bullets, screen, ship, aliens, stats, sb)
 
 
-def check_bullet_alien_collisions(settings, bullets, screen, ship, aliens):
+def check_bullet_alien_collisions(settings, bullets, screen, ship, aliens, stats, sb):
     collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+    if collisions:
+        for aliens in collisions.values():
+            stats.score += settings.alien_points * len(aliens)
+            sb.prep_score()
+        check_high_score(stats, sb)
 
     if len(aliens) == 0:
         settings.increase_speed()
@@ -173,3 +179,9 @@ def check_play_button(
 
         create_fleet(settings, screen, ship, aliens)
         ship.center_ship()
+
+
+def check_high_score(stats, sb):
+    if stats.score > stats.high_score:
+        stats.high_score = stats.score
+        sb.prep_high_score()
